@@ -84,7 +84,48 @@ public:
 
 };
 
+class PriorityQueue{
+    vector<int> arr;
+    int n;  
 
-int main() {
-    return 0;
-}
+public:
+
+    PriorityQueue(){
+        n = 0;
+    }
+     
+    void insert(int in){
+       
+    }
+    
+    int top() {
+    }
+
+    int pop(){
+   
+    }
+
+private: 
+        
+    void heapify(int i){
+        int smallest = i; 
+        int left = 2*i + 1; 
+        int right = 2*i + 2; 
+        
+        // Check if left or right are smaller 
+        if(left < n && arr[left] < arr[smallest]){
+            smallest = left; 
+        }
+        if (right < n && arr[right] < arr[smallest]){
+            smallest = right; 
+        }   
+    
+        // If new smallest
+        if (smallest != i){
+            swap(arr[smallest], arr[i]); 
+            heapify(smallest); 
+        }       
+    }
+}; 
+
+

@@ -38,9 +38,7 @@ public:
         while (!pq.empty()) {
             std::pair<int, int> top = pq.pop();
             int u = top.first;
-            int d = top.second;
-
-            if (d > dist[u]) continue; // Optimization: skip outdated entries
+            int d = top.second; 
             
             for (size_t i = 0; i < adj_list[u].size(); i++) {
                 int v = adj_list[u][i].first; 

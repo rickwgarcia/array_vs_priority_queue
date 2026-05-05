@@ -1,9 +1,9 @@
 #include <iostream>
 #include <vector>
-#include <chrono>
 #include "graph_list.h"
 #include "graph_matrix.h"
 #include "graph_priority_queue.h"
+#include "measure.h"
 
 // basic function to print out the resulting shortest path to each node from the source
 void print_distances(const std::string& type, const std::vector<int>& distances) {
@@ -19,27 +19,6 @@ void print_distances(const std::string& type, const std::vector<int>& distances)
     }
     std::cout << std::endl;
 }
-
-// wrapper function to measure algorithm walltime -- Avg. over 5 trials
-template <typename Graph>
-std::vector<int> time_shortest_path(const std::string& type, Graph& g, int src) {
-    using clock = std::chrono::high_resolution_clock;
-    std::vector<int> result;
-    double total_us = 0.0;
-    const int trials = 5;
-    for (int t = 0; t < trials; ++t) {
-        auto start = clock::now();
-        result = g.shortest_path(src);
-        auto end = clock::now();
-        total_us += std::chrono::duration<double, std::micro>(end - start).count();
-    }
-    std::cout << type << " avg runtime over " << trials << " trials: "
-              << (total_us / trials) << " us" << std::endl;
-    return result;
-}
-
-
-
 
 int main() {
     // --- Sparse Graph 1 ---

@@ -5,7 +5,6 @@
 #include <vector>
 #include <string>
 #include <utility>
-#include <sys/resource.h>
 #include "../graph_list.h"
 #include "../graph_matrix.h"
 #include "../graph_priority_queue.h"
@@ -13,31 +12,29 @@
 
 struct Measurement {
     double avg_us;
-    long peak_kb;
+    long graph_kb;
+    long algo_kb;
+    long total_kb;
 };
 
 template <typename Graph>
 Measurement measure(Graph& g, int src, int trials) {
     using clock = std::chrono::high_resolution_clock;
     double total = 0.0;
-    long max_delta = 0;
-    struct rusage before, after;
     for (int t = 0; t < trials; ++t) {
-        getrusage(RUSAGE_SELF, &before);
         auto start = clock::now();
         auto result = g.shortest_path(src);
         auto end = clock::now();
-        getrusage(RUSAGE_SELF, &after);
         total += std::chrono::duration<double, std::micro>(end - start).count();
-        long delta = after.ru_maxrss - before.ru_maxrss;
-        if (delta > max_delta) max_delta = delta;
     }
-#ifdef __APPLE__
-    long peak_kb = max_delta / 1024;  // macOS reports ru_maxrss in bytes
-#else
-    long peak_kb = max_delta;         // Linux reports ru_maxrss in KB
-#endif
-    return {total / trials, peak_kb};
+
+    long graph_bytes = static_cast<long>(g.memory_footprint());
+    long algo_bytes = static_cast<long>(g.algorithm_footprint());
+    long graph_kb = graph_bytes / 1024;
+    long algo_kb = algo_bytes / 1024;
+    long total_kb = (graph_bytes + algo_bytes) / 1024;
+
+    return {total / trials, graph_kb, algo_kb, total_kb};
 }
 
 int main() {
@@ -50,7 +47,10 @@ int main() {
     const int src = 0;
 
     std::ofstream csv("results.csv");
-    csv << "V,density_label,density,edges,implementation,avg_us,peak_kb\n";
+    csv << "V,density_label,density,edges,implementation,avg_us,graph_kb,algo_kb,total_kb\n";
+
+    std::ofstream stats_csv("graph_stats.csv");
+    stats_csv << "V,density_label,density,nodes,edges\n";
 
     std::mt19937 rng(seed);
 
@@ -62,12 +62,15 @@ int main() {
             auto edges = generate_edges(V, p, rng);
             int E = static_cast<int>(edges.size());
 
+            stats_csv << V << "," << label << "," << p << "," << V << "," << E << "\n";
+
             std::cerr << "V=" << V << " density=" << label
                       << " (p=" << p << ") E=" << E << std::endl;
 
             auto write_row = [&](const std::string& impl, const Measurement& m) {
                 csv << V << "," << label << "," << p << "," << E
-                    << "," << impl << "," << m.avg_us << "," << m.peak_kb << "\n";
+                    << "," << impl << "," << m.avg_us
+                    << "," << m.graph_kb << "," << m.algo_kb << "," << m.total_kb << "\n";
                 csv.flush();
             };
 
@@ -87,6 +90,8 @@ int main() {
     }
 
     csv.close();
+    stats_csv.close();
     std::cerr << "wrote results.csv" << std::endl;
+    std::cerr << "wrote graph_stats.csv" << std::endl;
     return 0;
 }

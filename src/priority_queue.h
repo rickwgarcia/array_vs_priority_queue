@@ -47,7 +47,11 @@ public:
     bool empty() {
         return arr.empty();
     }
-    
+
+    size_t size() const {
+        return arr.size();
+    }
+
 
 private: 
     /**

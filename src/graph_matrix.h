@@ -39,7 +39,8 @@ public:
      * @param src Source vertex.
      * @return Vector of distances from src to all other vertices.
      */
-    std::vector<int> shortest_path(int src) {  
+
+    std::vector<int> shortest_path(int src) {
         std::vector<int> dist(V, INT_MAX);
         std::vector<bool> visited(V, false);
         
@@ -59,7 +60,22 @@ public:
         
         return dist;  
     }  
-   
+
+    // Bytes held by the persistent graph storage: V x V int matrix.
+    size_t memory_footprint() const {
+        size_t bytes = sizeof(*this);
+        bytes += adj_matrix.capacity() * sizeof(adj_matrix[0]);
+        for (const auto& row : adj_matrix)
+            bytes += row.capacity() * sizeof(row[0]);
+        return bytes;
+    }
+
+    // Peak working-set bytes added by shortest_path: dist + visited.
+    size_t algorithm_footprint() const {
+        return V * sizeof(int) + V * sizeof(bool);
+    }
+
+
 private:
     /**
      * @brief Finds the unvisited vertex with the minimum distance.

@@ -33,7 +33,7 @@ Comparison of array-based vs min-heap Dijkstra implementations.
 
 ```sh
 cd src
-g++ -std=c++17 -O2 eval.cpp -o eval
+g++ eval.cpp -o eval
 ./eval
 ```
 
@@ -41,7 +41,7 @@ g++ -std=c++17 -O2 eval.cpp -o eval
 
 ```sh
 cd src/ablations
-g++ -std=c++17 -O2 size_ablations.cpp -o size_ablations
+g++ size_ablations.cpp -o size_ablations
 ./size_ablations
 cd ../figures
 python generate_heatmaps.py

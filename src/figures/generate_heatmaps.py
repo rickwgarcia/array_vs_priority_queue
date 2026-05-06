@@ -43,7 +43,8 @@ def pivot_mixed(df: pd.DataFrame, impl_by_density: dict, value_col: str) -> pd.D
 
 
 def draw_heatmap(ax, data: pd.DataFrame, title: str, vmin: float, vmax: float,
-                 fmt: str, cmap: str, xtick_labels: list, hide_y: bool = False):
+                 fmt: str, cmap: str, xtick_labels: list, unit: str = "",
+                 hide_y: bool = False):
     im = ax.imshow(
         data.values,
         aspect="auto",
@@ -53,32 +54,33 @@ def draw_heatmap(ax, data: pd.DataFrame, title: str, vmin: float, vmax: float,
         origin="upper",
     )
     ax.set_xticks(range(len(DENSITY_ORDER)))
-    ax.set_xticklabels(xtick_labels)
+    ax.set_xticklabels(xtick_labels, fontsize=13)
     if hide_y:
         ax.set_yticks([])
     else:
         ax.set_yticks(range(len(V_ORDER)))
-        ax.set_yticklabels(V_ORDER)
-        ax.set_ylabel("Vertices (V)")
-    ax.set_xlabel("Density")
-    ax.set_title(title)
+        ax.set_yticklabels(V_ORDER, fontsize=13)
+        ax.set_ylabel("Vertices (V)", fontsize=14)
+    ax.set_xlabel("Density", fontsize=14)
+    ax.set_title(title, fontsize=15)
 
     # Sequential cmaps (Blues, Reds): high values = dark cells → white text reads better.
     midpoint = (vmin + vmax) / 2
     for i in range(data.shape[0]):
         for j in range(data.shape[1]):
             val = data.values[i, j]
+            label = format(val, fmt) + (f" {unit}" if unit else "")
             ax.text(
                 j, i,
-                format(val, fmt),
+                label,
                 ha="center", va="center",
                 color="white" if val > midpoint else "black",
-                fontsize=9,
+                fontsize=13,
             )
     return im
 
 
-def make_figure(df, value_col, fmt, suptitle, out_path, cmap):
+def make_figure(df, value_col, fmt, suptitle, out_path, cmap, unit=""):
     array_table = pivot_mixed(df, ARRAY_IMPL_BY_DENSITY, value_col)
     heap_table = pivot_mixed(df, HEAP_IMPL_BY_DENSITY, value_col)
 
@@ -87,13 +89,14 @@ def make_figure(df, value_col, fmt, suptitle, out_path, cmap):
     if vmin == vmax:  # avoid degenerate color scale when all values are equal
         vmax = vmin + 1.0
 
-    fig, axes = plt.subplots(1, 2, figsize=(11, 7), gridspec_kw={"wspace": 0.15})
+    fig, axes = plt.subplots(1, 2, figsize=(12, 8), gridspec_kw={"wspace": 0.15})
     draw_heatmap(axes[0], array_table, "Array",
-                 vmin, vmax, fmt, cmap, xtick_labels=ARRAY_XTICK_LABELS)
+                 vmin, vmax, fmt, cmap, xtick_labels=ARRAY_XTICK_LABELS, unit=unit)
     draw_heatmap(axes[1], heap_table, "Min-Heap",
-                 vmin, vmax, fmt, cmap, xtick_labels=HEAP_XTICK_LABELS, hide_y=True)
+                 vmin, vmax, fmt, cmap, xtick_labels=HEAP_XTICK_LABELS, unit=unit,
+                 hide_y=True)
 
-    fig.suptitle(suptitle, fontsize=13)
+    fig.suptitle(suptitle, fontsize=16)
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out_path}")
@@ -109,6 +112,7 @@ def main():
         suptitle="Dijkstra average runtime over 5 trials",
         out_path=HERE / "runtime_heatmap.png",
         cmap="Blues",
+        unit="us",
     )
 
     make_figure(
@@ -118,6 +122,7 @@ def main():
         suptitle="Dijkstra total memory (algorithm + graph storage)",
         out_path=HERE / "memory_heatmap.png",
         cmap="Reds",
+        unit="KB",
     )
 
     make_figure(
@@ -127,6 +132,7 @@ def main():
         suptitle="Dijkstra algorithm working set",
         out_path=HERE / "memory_heatmap_algorithm.png",
         cmap="Reds",
+        unit="KB",
     )
 
     make_figure(
@@ -136,6 +142,7 @@ def main():
         suptitle="Dijkstra graph storage",
         out_path=HERE / "memory_heatmap_datastructure.png",
         cmap="Reds",
+        unit="KB",
     )
 
 
